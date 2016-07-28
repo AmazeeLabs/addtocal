@@ -111,6 +111,7 @@ function addtocal_field_formatter_info() {
         'past_events' => FALSE,
         'show_repeat_rule' => 'hide',
         'view_mode' => '',
+        'overwrite_view_mode' => '',
       ),
     ),
   );
@@ -125,6 +126,9 @@ function addtocal_field_formatter_view($entity_type, $entity, $field, $instance,
       $element = array();
       $date_element = date_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
       $view_mode = $display['settings']['view_mode'];
+      if (!empty($display['settings']['overwrite_view_mode'])) {
+        $view_mode = $display['settings']['overwrite_view_mode'];
+      }
 
       if ($date_element) {
         $element[0]['date'] = $date_element[0];
@@ -210,6 +214,14 @@ function addtocal_field_formatter_settings_form($field, $instance, $view_mode, $
     $description_options['tokenize output'] = 'Use Tokens';
   }
 
+  $element['overwrite_view_mode'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Use view mode settings'),
+    '#description' => t('Use the settings from another view mode. This is useful when using this in panelizer where the original view mode of the entity is not available.'),
+    '#default_value' => $settings['overwrite_view_mode'],
+    '#weight' => -1,
+  );
+
   $element['location'] = array(
     '#type' => 'fieldset',
     '#title' => t('Location'),
@@ -293,7 +305,7 @@ function addtocal_field_formatter_settings_form($field, $instance, $view_mode, $
 
   if ($tokens_enabled) {
     $element['tokens'] = array(
-      '#theme' => 'token_tree',
+      '#theme' => 'token_tree_link',
       '#token_types' => array('node'), // The token types that have specific context. Can be multiple token types like 'term' and/or 'user'
       '#global_types' => TRUE, // A boolean TRUE or FALSE whether to include 'global' context tokens like [current-user:*] or [site:*]. Defaults to TRUE.
       '#click_insert' => TRUE, // A boolean whether to include the 'Click this token to insert in into the the focused textfield' JavaScript functionality. Defaults to TRUE.
@@ -524,10 +536,16 @@ function addtocal_rfc_3339_date($start, $end, $timezone) {
   $endDate = new DateTime($end, $tz);
   $endDate->setTimezone($tz_utc);
 
+  // If the end date actually starts at the beginning of the day, we advance the
+  // end day with one day.
+  // @todo: is there a better way to do this?
+  $words = explode(' ', $end);
+  if (count($words) == 2 && $words[1] === '00:00:00') {
+    $endDate->add(date_interval_create_from_date_string('1 day'));
+  }
+
   $start_timestamp = $startDate->getTimestamp();
   $end_timestamp = $endDate->getTimestamp();
-
-  $diff_timestamp = $end_timestamp - $start_timestamp;
 
   $start_date = gmdate('Ymd', $start_timestamp) . 'T' . gmdate('His', $start_timestamp) . 'Z';
   $local_start_date = date('Ymd', $start_timestamp) . 'T' . date('His', $start_timestamp) . '';
@@ -596,7 +614,7 @@ UID:' . $entity_type . '-' . $entity_id . '@' . $_SERVER['HTTP_HOST'] . '
 DTSTAMP:' . $rfc_dates['start'] . '
 DTSTART:' . $rfc_dates['start'] . '
 DTEND:' . $rfc_dates['end'] . '
-SUMMARY:' . check_plain($title) . '
+SUMMARY:' .html_entity_decode($title, ENT_QUOTES) . '
 DESCRIPTION: ' . $description . ' - ' . url($url, array('absolute' => TRUE)) . '
 LOCATION:' . $location . '
 END:VEVENT
