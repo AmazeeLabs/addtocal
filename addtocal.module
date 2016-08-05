@@ -530,30 +530,37 @@ function addtocal_rfc_3339_date($start, $end, $timezone) {
   $tz_utc = new DateTimeZone('UTC');
   $tz = new DateTimeZone($timezone);
 
-  $startDate = new DateTime($start, $tz);
-  $startDate->setTimezone($tz_utc);
-
-  $endDate = new DateTime($end, $tz);
-  $endDate->setTimezone($tz_utc);
+  // If the start date is beginning of the day, then we just return the date.
+  // @todo: is there a better way to do this?
+  $words = explode(' ', $start);
+  if (count($words) == 2 && $words[1] === '00:00:00') {
+    $startDate = new DateTime($words[0], $tz_utc);
+    $start_date = $local_start_date = $startDate->format('Ymd');
+  }
+  else {
+    $startDate = new DateTime($start, $tz);
+    $startDate->setTimezone($tz_utc);
+    $start_timestamp = $startDate->getTimestamp();
+    $start_date = gmdate('Ymd', $start_timestamp) . 'T' . gmdate('His', $start_timestamp) . 'Z';
+    $local_start_date = date('Ymd', $start_timestamp) . 'T' . date('His', $start_timestamp) . '';
+  }
 
   // If the end date actually starts at the beginning of the day, we advance the
   // end day with one day.
   // @todo: is there a better way to do this?
   $words = explode(' ', $end);
   if (count($words) == 2 && $words[1] === '00:00:00') {
+    $endDate = new DateTime($words[0], $tz_utc);
     $endDate->add(date_interval_create_from_date_string('1 day'));
+    $end_date = $endDate->format('Ymd');
   }
-
-  $start_timestamp = $startDate->getTimestamp();
-  $end_timestamp = $endDate->getTimestamp();
-
-  $start_date = gmdate('Ymd', $start_timestamp) . 'T' . gmdate('His', $start_timestamp) . 'Z';
-  $local_start_date = date('Ymd', $start_timestamp) . 'T' . date('His', $start_timestamp) . '';
-  $end_date = gmdate('Ymd', $end_timestamp) . 'T' . gmdate('His', $end_timestamp) . 'Z';
-  $local_end_date = date('Ymd', $end_timestamp) . 'T' . date('His', $end_timestamp) . '';
-
-  $diff_hours = str_pad(round(($diff_timestamp / 60) / 60), 2, '0', STR_PAD_LEFT);
-  $diff_minutes = str_pad(abs(round($diff_timestamp / 60) - ($diff_hours * 60)), 2, '0', STR_PAD_LEFT);
+  else {
+    $endDate = new DateTime($end, $tz);
+    $endDate->setTimezone($tz_utc);
+    $end_timestamp = $endDate->getTimestamp();
+    $end_date = gmdate('Ymd', $end_timestamp) . 'T' . gmdate('His', $end_timestamp) . 'Z';
+    $local_end_date = date('Ymd', $end_timestamp) . 'T' . date('His', $end_timestamp) . '';
+  }
 
   return array(
     'start' => $start_date,
