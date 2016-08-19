@@ -442,7 +442,7 @@ function addtocal_extract_event_info($entity_type, $entity, $entity_id, $field_n
   $url = $uri['path'];
 
   return array(
-    'title' => check_plain($entity->title),
+    'title' => t('Sonova: @event_title', array('@event_title' => $entity->title)),
     'start' => $start_date,
     'end' => $end_date,
     'timezone' => $timezone,
