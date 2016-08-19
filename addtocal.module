@@ -149,7 +149,7 @@ function addtocal_field_formatter_view($entity_type, $entity, $field, $instance,
         // Check setting for past events and show widget accordingly
         if (strtotime($start_date) >= time() ||
           ($display['settings']['past_events'] == TRUE && strtotime($start_date) < time())) {
-          $element[0] += addtocal_render(
+          $element[0] = addtocal_render(
             $entity_type,
             $entity_id,
             $info['start'],
