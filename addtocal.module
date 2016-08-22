@@ -138,7 +138,8 @@ function addtocal_field_formatter_view($entity_type, $entity, $field, $instance,
         $info = addtocal_extract_event_info($entity_type, $entity, $entity_id, $field['field_name'], $display);
         $dates = field_get_items($entity_type, $entity, $field['field_name']);
 
-        $start_date = $dates[(count($dates) - 1)]['value'];
+        //$start_date = $dates[(count($dates) - 1)]['value'];
+        $end_date = $dates[(count($dates))]['value'];
 
          // Build URLs
         $base_url = $entity_type . '/' . $entity_id . '/' . $field['field_name'] . '/' . $view_mode;
@@ -147,8 +148,8 @@ function addtocal_field_formatter_view($entity_type, $entity, $field, $instance,
         $yahoo_url = $base_url . '/addtocal-yahoo';
 
         // Check setting for past events and show widget accordingly
-        if (strtotime($start_date) >= time() ||
-          ($display['settings']['past_events'] == TRUE && strtotime($start_date) < time())) {
+        if (strtotime($end_date) >= time() ||
+          ($display['settings']['past_events'] == TRUE && strtotime($end_date) < time())) {
           $element[0] = addtocal_render(
             $entity_type,
             $entity_id,
