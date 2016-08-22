@@ -139,7 +139,10 @@ function addtocal_field_formatter_view($entity_type, $entity, $field, $instance,
         $dates = field_get_items($entity_type, $entity, $field['field_name']);
 
         //$start_date = $dates[(count($dates) - 1)]['value'];
-        $end_date = $dates[(count($dates))]['value'];
+        $end_date = $dates[(count($dates) - 1)]['value2'];
+        if (empty($end_date)) {
+          $end_date = $dates[(count($dates) - 1)]['value'];
+        }
 
          // Build URLs
         $base_url = $entity_type . '/' . $entity_id . '/' . $field['field_name'] . '/' . $view_mode;
@@ -161,6 +164,9 @@ function addtocal_field_formatter_view($entity_type, $entity, $field, $instance,
             $google_url,
             $yahoo_url
           );
+        }
+        else {
+          unset($element[0]);
         }
 
         return $element;
