@@ -143,6 +143,13 @@ function addtocal_field_formatter_view($entity_type, $entity, $field, $instance,
         if (empty($end_date)) {
           $end_date = $dates[(count($dates) - 1)]['value'];
         }
+        $end_timestamp = strtotime($end_date);
+        $words = explode(' ', $end_date);
+        // Special case for the all-day events. The end date should be the end
+        // of the day, not the beginning of it.
+        if (count($words) == 2 && $words[1] === '00:00:00') {
+          $end_timestamp += 86400;
+        }
 
          // Build URLs
         $base_url = $entity_type . '/' . $entity_id . '/' . $field['field_name'] . '/' . $view_mode;
@@ -151,8 +158,8 @@ function addtocal_field_formatter_view($entity_type, $entity, $field, $instance,
         $yahoo_url = $base_url . '/addtocal-yahoo';
 
         // Check setting for past events and show widget accordingly
-        if (strtotime($end_date) >= time() ||
-          ($display['settings']['past_events'] == TRUE && strtotime($end_date) < time())) {
+        if ($end_timestamp >= time() ||
+          ($display['settings']['past_events'] == TRUE && $end_timestamp < time())) {
           $element[0] = addtocal_render(
             $entity_type,
             $entity_id,
